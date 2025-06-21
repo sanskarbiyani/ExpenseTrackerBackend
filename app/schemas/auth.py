@@ -8,27 +8,27 @@ class RegisterRequest(BaseModel):
     password: str
 
 class LoginRequest(BaseModel):
-    username: str | None = None
-    email: str | None = None
+    username: str 
     password: str
 
-    @model_validator(mode="before")
-    @classmethod
-    def check_username_or_email(cls, values):
-        username = values.get("username")
-        email = values.get("email")
-        if not username and email:
-            raise ValueError("Either username or email must be provided.")
+    # Use Below modelt to add Validation for username or email
+    # @model_validator(mode="before")
+    # @classmethod
+    # def check_username_or_email(cls, values):
+        # username = values.get("username")
+        # email = values.get("email")
+        # if not username and email:
+        #     raise ValueError("Either username or email must be provided.")
     
-        if email:
-            try:
-                validate_email(email)
-            except ValueError:
-                raise ValueError("Invalid email format")
+        # if email:
+        #     try:
+        #         validate_email(email)
+        #     except ValueError:
+        #         raise ValueError("Invalid email format")
 
-        return values
+        # return values
 
 class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserBase
+    access_token: str = ""
+    token_type: str = ""
+    user: UserBase | None = None

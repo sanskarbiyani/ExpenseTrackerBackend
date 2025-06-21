@@ -14,8 +14,6 @@ def create_user(db: Session, user: UserCreate) -> User:
     new_user = User(
         username=user.username,
         email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
         password=hashed_password
     )
     try:
