@@ -1,0 +1,95 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.pipenv/
+pipenv/
+
+# Python Environment files
+.python-version
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Bandit
+bandit.yaml
+
+# Pydantic cache
+__pydantic_cache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.env.*
+*.env
+!.env.example
+
+# Docker
+*.log
+docker-compose.override.yml
+docker-compose.prod.yml
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Local development artifacts
+*.db
+*.sqlite3
+*.log
+
+# Optional: if you're using Alembic
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
