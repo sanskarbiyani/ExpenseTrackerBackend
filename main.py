@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/healthCheck", tags=["health"])
 def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
