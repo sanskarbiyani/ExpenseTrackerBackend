@@ -6,6 +6,8 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     is_active: bool = True
+    credit: float = 0.0
+    debit: float = 0.0
 
     class Config:
         from_attributes = True

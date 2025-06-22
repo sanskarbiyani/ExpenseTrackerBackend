@@ -11,10 +11,7 @@ def verfy_user_credentials(request: LoginRequest, db: Session) -> User:
     hashed_password = hash_password(request.password)
 
     try:
-        if not request.username:
-            user = db.query(User).filter_by(email = request.email, password=hashed_password).first()
-        else:
-            user = db.query(User).filter_by(username=request.username).first()
+        user = db.query(User).filter_by(username=request.username).first()
     except Exception as e:
         raise HTTPException(
             status_code=500,
