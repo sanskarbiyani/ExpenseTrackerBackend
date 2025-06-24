@@ -11,7 +11,7 @@ def get_all_transactions(user_id: int, db: Session) -> list[CreateTransactionRes
     """ Retrieves all transactions for a given user."""
     try:
         transactions = db.query(Transaction).filter(Transaction.user_id == user_id).all()
-        return [CreateTransactionResponse.model_validate(transaction) for transaction in transactions]
+        return [CreateTransactionResponse.model_validate(transaction, from_attributes=True) for transaction in transactions]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
