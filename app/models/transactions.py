@@ -4,9 +4,9 @@ from enum import IntEnum
 from app.database.session import Base
 
 class TransactionType(IntEnum):
-    INCOME = 0
-    EXPENSE = 1
-    TRANSFER = 2
+    INCOME = 1
+    EXPENSE = 2
+    TRANSFER = 3
 
 class Transaction(Base):
     __tablename__ = "transactions"

@@ -16,17 +16,16 @@ class TransactionBase(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_amount(cls, values):
-        amount = values.amount
-        desc = values.description
-        if amount <= 0:
+        amount = values.get("amount")
+        desc = values.get("description")
+        transaction_type = values.get("transaction_type")
+        if amount is None or amount <= 0:
             raise ValueError("Amount must be greater than zero.")
         if not desc:
             raise ValueError("Description cannot be empty.")
-        if not values.title:
-            raise ValueError("Title cannot be empty.")
-        if not values.transaction_type:
+        if not transaction_type:
             raise ValueError("Transaction type must be specified.")
-        if values.transaction_type not in TransactionType:
+        if values.get("transaction_type") not in TransactionType:
             raise ValueError("Invalid transaction type. Must be 'income' or 'expense'.")
         return values
         
