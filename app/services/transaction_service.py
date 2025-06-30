@@ -10,7 +10,13 @@ from app.models.transactions import Transaction
 def get_all_transactions(user_id: int, db: Session) -> list[CreateTransactionResponse]:
     """ Retrieves all transactions for a given user."""
     try:
-        transactions = db.query(Transaction).filter(Transaction.user_id == user_id).all()
+        transactions = (
+            db.query(Transaction)
+            .filter(Transaction.user_id == user_id)
+            .order_by(Transaction.id.desc())
+            .limit(20)
+            .all()
+        )
         return [CreateTransactionResponse.model_validate(transaction, from_attributes=True) for transaction in transactions]
     except Exception as e:
         raise HTTPException(
@@ -18,12 +24,13 @@ def get_all_transactions(user_id: int, db: Session) -> list[CreateTransactionRes
             detail="An unexpected error occurred while retrieving transactions."
         )
 
-def add_transaction(transaction: TransactionBase, user_id: int, db: Session) -> bool:
+def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
     """ Adds a transaction to the database."""
     new_transaction = Transaction(
         amount=transaction.amount,
         description=transaction.description,
         user_id=user_id,
+        transaction_type=transaction.transaction_type,
         # currency=transaction.currency,  # Uncomment if currency is part of the model
     )
     try:
@@ -54,4 +61,9 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session) -> 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while creating the transaction."
         )
-    return True
+    if new_transaction.id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Transaction creation failed, ID is None."
+        )
+    return new_transaction

@@ -16,7 +16,7 @@ class Transaction(Base):
     amount = Column(Float, nullable=False)
     title = Column(String, nullable=False, default="Not added.", server_default="Not added.")
     description = Column(String, nullable=True)
-    transaction_type = Column(Integer, nullable=False, default=TransactionType.EXPENSE, server_default="1")  # 0 for income, 1 for expense
+    transaction_type = Column(Integer, nullable=False, default=TransactionType.EXPENSE, server_default="2")  # 1 for income, 2 for expense
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 

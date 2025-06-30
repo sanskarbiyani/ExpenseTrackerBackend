@@ -18,7 +18,7 @@ def get_transactions(db: Session = Depends(get_db), user_id: int = Depends(get_c
 @router.post("/create", response_model= APIResponse, tags=["transactions"])
 def create_transaction(request: TransactionBase, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)):
     """Endpoint to create a new transaction."""
-    success = add_transaction(request, user_id, db)
-    if not success:
+    new_transaction = add_transaction(request, user_id, db)
+    if not new_transaction:
         return APIResponse(success=False, error="Failed to create transaction.")
-    return APIResponse(data={"message": "Transaction created successfully."})
+    return APIResponse(data={"message": "Transaction created successfully.", "id": new_transaction.id})

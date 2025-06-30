@@ -13,21 +13,16 @@ class TransactionBase(BaseModel):
         "from_attributes": True,
     }
 
-    @model_validator(mode="before")
-    @classmethod
-    def check_amount(cls, values):
-        amount = values.get("amount")
-        desc = values.get("description")
-        transaction_type = values.get("transaction_type")
-        if amount is None or amount <= 0:
+    @model_validator(mode="after")
+    def check_amount(self):
+        if self.amount <= 0:
             raise ValueError("Amount must be greater than zero.")
-        if not desc:
+        if not self.description:
             raise ValueError("Description cannot be empty.")
-        if not transaction_type:
+        if not self.transaction_type:
             raise ValueError("Transaction type must be specified.")
-        if values.get("transaction_type") not in TransactionType:
-            raise ValueError("Invalid transaction type. Must be 'income' or 'expense'.")
-        return values
+        # By now, transaction_type is already parsed into TransactionType enum, so no need for further check
+        return self
         
 
 class CreateTransactionResponse(TransactionBase):
