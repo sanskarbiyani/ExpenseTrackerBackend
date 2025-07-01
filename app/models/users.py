@@ -1,5 +1,6 @@
 from app.database.session import Base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, Float
+from sqlalchemy.orm import relationship
 
 class User(Base):
     __tablename__ = "users"
@@ -13,3 +14,5 @@ class User(Base):
     debit = Column(Float, default=0, server_default="0")
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    accounts = relationship("Account", back_populates="user", cascade="all, delete-orphan")
