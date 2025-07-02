@@ -6,26 +6,29 @@ from app.dependencies.shared import get_db
 from app.schemas.accounts import AccountBase, CreateAccountResponse
 from app.schemas.base_response import APIResponse
 from app.dependencies.auth import get_current_user
-from app.services.account_service import create_new_account
+from app.services.account_service import create_new_account, get_all_accounts_by_user_id
 
 router = APIRouter()
 
 @router.get("", response_model=APIResponse, tags=["accounts"])
-def get_all_accounts(db: Session = Depends(get_db)):
+def get_all_accounts(user_id = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Endpoint to retrieve all accounts.
-    This is a placeholder function and should be implemented.
     """
-    # Placeholder for actual implementation
-    return {"message": "This endpoint will return all accounts."}
+    if not user_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: User ID is required to access accounts."
+        )
+    all_accounts = get_all_accounts_by_user_id(user_id=user_id, db=db)
+    accounts = [CreateAccountResponse.model_validate(account) for account in all_accounts]
+    return APIResponse(success=True, data=accounts)
 
 @router.post("/create", response_model=APIResponse, tags=["accounts"])
 def create_account(request: AccountBase, user_id = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Endpoint to create a new account.
-    This is a placeholder function and should be implemented.
     """
-    # Placeholder for actual implementation
     if not request.name:
         return APIResponse(success=False, error="Account name is required.")
     if request.balance < 0:

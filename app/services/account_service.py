@@ -43,3 +43,13 @@ def create_new_account(account: AccountBase, user_id: int, db: Session) -> Accou
                     detail= f"Somethign went wrong while creating the account."
                 )
     return new_account
+
+
+def get_all_accounts_by_user_id(user_id, db: Session) -> list[Account]:
+    accounts = db.query(Account).filter(Account.user_id == user_id).order_by(Account.updated_at.desc()).all()
+    if not accounts:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No accounts found for the user."
+        )
+    return accounts
