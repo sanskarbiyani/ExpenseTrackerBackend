@@ -8,6 +8,7 @@ class TransactionBase(BaseModel):
     description: str
     title: str
     transaction_type: TransactionType
+    account_id: int
     
     model_config = {
         "from_attributes": True,

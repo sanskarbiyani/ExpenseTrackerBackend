@@ -31,6 +31,7 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
         description=transaction.description,
         user_id=user_id,
         transaction_type=transaction.transaction_type,
+        account_id=transaction.account_id, 
         # currency=transaction.currency,  # Uncomment if currency is part of the model
     )
     try:

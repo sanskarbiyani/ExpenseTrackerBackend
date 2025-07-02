@@ -13,6 +13,7 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
     amount = Column(Float, nullable=False)
     title = Column(String, nullable=False, default="Not added.", server_default="Not added.")
     description = Column(String, nullable=True)
