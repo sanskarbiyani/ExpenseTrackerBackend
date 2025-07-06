@@ -28,7 +28,11 @@ class LoginRequest(BaseModel):
 
         # return values
 
+class TokenRequest(BaseModel):
+    token: str
+
 class TokenResponse(BaseModel):
     access_token: str = ""
+    refresh_token: str = ""
     token_type: str = ""
     user: UserBase | None = None
