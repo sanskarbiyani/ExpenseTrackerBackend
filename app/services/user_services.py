@@ -45,3 +45,13 @@ def create_user(db: Session, user: UserCreate) -> User:
             detail="An unexpected error occurred while creating the user."
         )
     return new_user
+
+def get_user(user_id: int, db: Session) -> User:
+    """Retrieve a user by ID."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+    return user

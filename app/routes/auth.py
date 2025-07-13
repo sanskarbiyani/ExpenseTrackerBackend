@@ -5,6 +5,7 @@ from app.dependencies.shared import get_db
 from app.schemas.auth import LoginRequest, TokenResponse, TokenRequest
 from app.schemas.base_response import APIResponse
 from app.services.auth_service import verfy_user_credentials
+from app.services.user_services import get_user
 from app.auth.jwt import create_access_token, create_refresh_token, verify_refresh_token
 from app.schemas.users import UserBase
 
@@ -35,6 +36,7 @@ def validate_token(request: TokenRequest, db: Session = Depends(get_db)):
     
     token = create_access_token(data={"sub": user_id})
     refresh_token = create_refresh_token(data={"sub": user_id})
-    token_response = TokenResponse(access_token=token, token_type="bearer", refresh_token=refresh_token)
+    current_user = get_user(user_id, db)
+    token_response = TokenResponse(access_token=token, token_type="bearer", refresh_token=refresh_token, user=UserBase.model_validate(current_user))
     return APIResponse(data=token_response)
     
