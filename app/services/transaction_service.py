@@ -1,22 +1,32 @@
 import psycopg2
 import re
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from app.schemas.transactions import TransactionBase, CreateTransactionResponse
+from app.schemas.transactions import TransactionBase, CreateTransactionResponse, FilterTransaction
 from app.models.transactions import Transaction
+from app.schemas.balance_summary import BalanceSummary
 
-def get_all_transactions(user_id: int, db: Session) -> list[CreateTransactionResponse]:
+def get_all_transactions(user_id: int, transaction_filters: FilterTransaction, db: Session) -> list[CreateTransactionResponse]:
     """ Retrieves all transactions for a given user."""
     try:
         transactions = (
             db.query(Transaction)
             .filter(Transaction.user_id == user_id)
             .order_by(Transaction.id.desc())
-            .limit(20)
-            .all()
         )
+        if transaction_filters.account_id:
+            transactions = transactions.filter(Transaction.account_id == transaction_filters.account_id)
+        if transaction_filters.transaction_type:
+            transactions = transactions.filter(Transaction.transaction_type == transaction_filters.transaction_type)
+        if transaction_filters.start_date:
+            transactions = transactions.filter(Transaction.created_at >= transaction_filters.start_date)
+        if transaction_filters.end_date:
+            transactions = transactions.filter(Transaction.created_at <= transaction_filters.end_date)
+        transactions = transactions.limit(20).all()
+
         return [CreateTransactionResponse.model_validate(transaction, from_attributes=True) for transaction in transactions]
     except Exception as e:
         raise HTTPException(
@@ -68,3 +78,22 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
             detail="Transaction creation failed, ID is None."
         )
     return new_transaction
+
+def get_balance_summary_details(user_id: int, account_id: int, db: Session) -> BalanceSummary:
+    """ Retrieves the balance summary - today, week and month balance for a given user."""
+    try:
+        sql = text("""
+            SELECT * from get_balance_summary(:user_id, :account_id)
+        """)
+        balance_summary = db.execute(sql, {"user_id": user_id, "account_id": account_id}).fetchone()
+        if not balance_summary:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No balance summary found for the given user and account."
+            )
+        return BalanceSummary.model_validate(balance_summary, from_attributes=True)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving the balance summary."
+        )

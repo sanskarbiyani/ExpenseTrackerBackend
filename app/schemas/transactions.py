@@ -32,3 +32,14 @@ class CreateTransactionResponse(TransactionBase):
     model_config = {
         "from_attributes": True,
     }
+
+class FilterTransaction(BaseModel):
+    account_id: int | None = None
+    transaction_type: TransactionType | None = None
+    amount: float | None = None
+    start_date: str | None = None  # ISO format date string
+    end_date: str | None = None  # ISO format date string
+    limit: int = 20
+    model_config = {
+        "from_attributes": True,
+    }
