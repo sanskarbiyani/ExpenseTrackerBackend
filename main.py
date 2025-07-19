@@ -1,3 +1,5 @@
+import os
+import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -8,8 +10,26 @@ from sqlalchemy import text
 from app.database.session import Base, engine
 from app.routes import user, auth, transactions, accounts
 from app.schemas.base_response import APIResponse
+from dotenv import load_dotenv
 
-app = FastAPI(debug=True)
+load_dotenv()
+
+ENV = os.getenv("ENV", "prod")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+# Configure logging level
+log_level = logging.DEBUG if DEBUG else logging.WARNING
+
+logging.basicConfig(
+    level=log_level,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+# SQLAlchemy engine logs (SQL queries, etc.)
+logging.getLogger("sqlalchemy.engine").setLevel(log_level)
+logging.getLogger("sqlalchemy.pool").setLevel(logging.ERROR)
+
+app = FastAPI(debug=DEBUG)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +41,11 @@ app.add_middleware(
 
 @app.get("/healthCheck", tags=["health"])
 async def health_check():
+    """Health check endpoint."""
+    return {"status": "ok"}
+    
+@app.get("/db-connectivity", tags=["health"])
+async def check_db_connectivity():
     """Health check endpoint."""
     try:
         async with engine.begin() as conn:
