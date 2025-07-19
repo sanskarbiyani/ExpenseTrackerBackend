@@ -3,18 +3,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 
 from app.database.session import Base, engine
 from app.routes import user, auth, transactions, accounts
 from app.schemas.base_response import APIResponse
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    yield
-    # Cleanup code can be added here if needed
-
-app = FastAPI(lifespan=lifespan, debug=True)
+app = FastAPI(debug=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,9 +20,14 @@ app.add_middleware(
 )
 
 @app.get("/healthCheck", tags=["health"])
-def health_check():
+async def health_check():
     """Health check endpoint."""
-    return {"status": "ok"}
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 app.include_router(user.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])

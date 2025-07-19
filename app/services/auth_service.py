@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from fastapi import HTTPException
 
 from app.schemas.auth import LoginRequest
@@ -6,12 +7,11 @@ from app.models.users import User
 from app.utils.security import hash_password, verify_password
 
 
-def verfy_user_credentials(request: LoginRequest, db: Session) -> User:
+async def verfy_user_credentials(request: LoginRequest, db: AsyncSession) -> User:
     """Verify user credentials and return the user object."""
-    hashed_password = hash_password(request.password)
-
     try:
-        user = db.query(User).filter_by(username=request.username).first()
+        result = await db.execute(select(User).where(User.username == request.username))
+        user = result.scalars().first()
     except Exception as e:
         raise HTTPException(
             status_code=500,

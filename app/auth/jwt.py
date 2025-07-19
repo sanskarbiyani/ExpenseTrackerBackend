@@ -15,7 +15,7 @@ ALGORITHM = os.getenv("ALGORITHM", "HS256")  # Default to HS256 if not set
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))  # Default to 30 minutes if not set
 REFRESH_TOKEN_EXPIRE_MINUTES = int(os.getenv("REFRESH_TOKEN_EXPIRE_MINUTES", 14400))  # Default to 30 minutes if not set
 
-def create_access_token(data: dict):
+async def create_access_token(data: dict):
     to_encode = data.copy()
 
     if "sub" not in to_encode:
@@ -36,7 +36,7 @@ def create_access_token(data: dict):
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def create_refresh_token(data: dict):
+async def create_refresh_token(data: dict):
     to_encode = data.copy()
 
     if "sub" not in to_encode:
@@ -79,7 +79,7 @@ def verify_access_token(token: str):
     except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-def verify_refresh_token(token: str):
+async def verify_refresh_token(token: str):
     try:
         payload = jwt.decode(
             token,

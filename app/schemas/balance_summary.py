@@ -5,5 +5,6 @@ class BalanceSummary(BaseModel):
     week_balance: float
     month_balance: float
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True,
+    }

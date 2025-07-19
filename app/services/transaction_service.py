@@ -1,7 +1,8 @@
 import psycopg2
 import re
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
@@ -9,23 +10,22 @@ from app.schemas.transactions import TransactionBase, CreateTransactionResponse,
 from app.models.transactions import Transaction
 from app.schemas.balance_summary import BalanceSummary
 
-def get_all_transactions(user_id: int, transaction_filters: FilterTransaction, db: Session) -> list[CreateTransactionResponse]:
+async def get_all_transactions(user_id: int, transaction_filters: FilterTransaction, db: AsyncSession) -> list[CreateTransactionResponse]:
     """ Retrieves all transactions for a given user."""
     try:
-        transactions = (
-            db.query(Transaction)
-            .filter(Transaction.user_id == user_id)
-            .order_by(Transaction.id.desc())
-        )
+        stmt = select(Transaction).where(Transaction.user_id == user_id)
         if transaction_filters.account_id:
-            transactions = transactions.filter(Transaction.account_id == transaction_filters.account_id)
+            transactions = stmt.filter(Transaction.account_id == transaction_filters.account_id)
         if transaction_filters.transaction_type:
-            transactions = transactions.filter(Transaction.transaction_type == transaction_filters.transaction_type)
+            transactions = stmt.filter(Transaction.transaction_type == transaction_filters.transaction_type)
         if transaction_filters.start_date:
-            transactions = transactions.filter(Transaction.created_at >= transaction_filters.start_date)
+            transactions = stmt.filter(Transaction.created_at >= transaction_filters.start_date)
         if transaction_filters.end_date:
-            transactions = transactions.filter(Transaction.created_at <= transaction_filters.end_date)
-        transactions = transactions.limit(20).all()
+            transactions = stmt.filter(Transaction.created_at <= transaction_filters.end_date)
+        
+        stmt = stmt.order_by(Transaction.created_at.desc()).limit(20)
+        result = await db.execute(stmt)
+        transactions = result.scalars().all()
 
         return [CreateTransactionResponse.model_validate(transaction, from_attributes=True) for transaction in transactions]
     except Exception as e:
@@ -34,7 +34,7 @@ def get_all_transactions(user_id: int, transaction_filters: FilterTransaction, d
             detail="An unexpected error occurred while retrieving transactions."
         )
 
-def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
+async def add_transaction(transaction: TransactionBase, user_id: int, db: AsyncSession):
     """ Adds a transaction to the database."""
     new_transaction = Transaction(
         amount=transaction.amount,
@@ -46,10 +46,10 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
     )
     try:
         db.add(new_transaction)
-        db.commit()
-        db.refresh(new_transaction)
+        await db.commit()
+        await db.refresh(new_transaction)
     except IntegrityError as e:
-        db.rollback()
+        await db.rollback()
         if isinstance(e.orig, psycopg2.errors.UniqueViolation):
             # Handle unique constraint violation
             constraint_name = e.orig.diag.constraint_name
@@ -67,7 +67,7 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
                     detail= f"{constraint_name} already exists."
                 )
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while creating the transaction."
@@ -79,13 +79,14 @@ def add_transaction(transaction: TransactionBase, user_id: int, db: Session):
         )
     return new_transaction
 
-def get_balance_summary_details(user_id: int, account_id: int, db: Session) -> BalanceSummary:
+async def get_balance_summary_details(user_id: int, account_id: int, db: AsyncSession) -> BalanceSummary:
     """ Retrieves the balance summary - today, week and month balance for a given user."""
     try:
         sql = text("""
             SELECT * from get_balance_summary(:user_id, :account_id)
         """)
-        balance_summary = db.execute(sql, {"user_id": user_id, "account_id": account_id}).fetchone()
+        result = await db.execute(sql, {"user_id": user_id, "account_id": account_id})
+        balance_summary = result.fetchone()
         if not balance_summary:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

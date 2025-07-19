@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.shared import get_db
 from app.schemas.base_response import APIResponse
@@ -11,9 +11,9 @@ from app.schemas.auth import TokenResponse
 router = APIRouter()
 
 @router.post("/register", response_model=APIResponse, tags=["users"])
-def register_user(request: UserCreate ,db: Session = Depends(get_db)):
+async def register_user(request: UserCreate ,db: AsyncSession = Depends(get_db)):
     """Register a new user and return a token response."""
-    user = create_user(db, request)
-    token = create_access_token(data={"sub": user.id})
+    user = await create_user(db, request)
+    token = await create_access_token(data={"sub": user.id})
     tokenResponse = TokenResponse(access_token=token, token_type="bearer", user=UserBase.model_validate(user))
     return APIResponse(data=tokenResponse)

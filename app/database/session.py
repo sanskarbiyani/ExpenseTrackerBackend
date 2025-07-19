@@ -1,21 +1,20 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+import ssl
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 import os
 from dotenv import load_dotenv
 
-# Optional: Load environment variables from a .env file
 load_dotenv()
+ssl_context = ssl.create_default_context()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")  # default fallback
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
-# Engine (connects to the database)
-engine = create_engine(
+engine = create_async_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+    connect_args={"check_same_thread": False, "ssl": ssl_context} if DATABASE_URL.startswith("sqlite") else {},
+    echo=True,
 )
 
-# SessionLocal is a class that will be used to create DB sessions
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, autoflush=False, expire_on_commit=False)
 
-# Base class for model declaration
 Base = declarative_base()
