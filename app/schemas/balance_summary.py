@@ -8,3 +8,11 @@ class BalanceSummary(BaseModel):
     model_config = {
         "from_attributes": True,
     }
+
+class MonthlyBalanceSummary(BaseModel):
+    month: str
+    total: float
+
+    model_config = {
+        "from_attributes": True,
+    }

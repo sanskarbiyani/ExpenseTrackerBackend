@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 
 from app.schemas.transactions import TransactionBase, CreateTransactionResponse, FilterTransaction
 from app.models.transactions import Transaction
-from app.schemas.balance_summary import BalanceSummary
+from app.schemas.balance_summary import BalanceSummary, MonthlyBalanceSummary
 
 async def get_all_transactions(user_id: int, transaction_filters: FilterTransaction, db: AsyncSession) -> list[CreateTransactionResponse]:
     """ Retrieves all transactions for a given user."""
@@ -86,6 +86,9 @@ async def get_balance_summary_details(user_id: int, account_id: int, db: AsyncSe
             SELECT * from get_balance_summary(:user_id, :account_id)
         """)
         result = await db.execute(sql, {"user_id": user_id, "account_id": account_id})
+        # row = result.mappings().first()
+        print(result.keys())
+        # print(row)
         balance_summary = result.fetchone()
         if not balance_summary:
             raise HTTPException(
@@ -97,4 +100,24 @@ async def get_balance_summary_details(user_id: int, account_id: int, db: AsyncSe
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while retrieving the balance summary."
+        )
+
+async def get_monthly_balance_summary(user_id: int, account_id: int, db: AsyncSession) -> list[MonthlyBalanceSummary]:
+    """ Retrieves the monthly balance summary for a given user."""
+    try:
+        sql = text("""
+            SELECT month, total from get_monthly_transaction_summary(:user_id, :account_id)
+        """)
+        result = await db.execute(sql, {"user_id": user_id, "account_id": account_id})
+        monthly_summary = result.mappings().all()
+        if not monthly_summary:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No monthly balance summary found for the given user and account."
+            )
+        return [MonthlyBalanceSummary.model_validate(row) for row in monthly_summary]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving the monthly balance summary."
         )

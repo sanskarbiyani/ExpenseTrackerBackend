@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -6,7 +7,7 @@ from app.dependencies.shared import get_db
 from app.dependencies.auth import get_current_user
 from app.schemas.base_response import APIResponse
 from app.schemas.transactions import TransactionBase, CreateTransactionResponse, FilterTransaction
-from app.services.transaction_service import add_transaction, get_all_transactions, get_balance_summary_details
+from app.services.transaction_service import add_transaction, get_all_transactions, get_balance_summary_details, get_monthly_balance_summary
 
 router = APIRouter()
 
@@ -25,10 +26,17 @@ async def create_transaction(request: TransactionBase, db: AsyncSession = Depend
     return APIResponse(data={"message": "Transaction created successfully.", "id": new_transaction.id})
 
 @router.get("/balance-summary", response_model=APIResponse, tags=["transactions"])
-def get_balance_summary(account_id = Query(None),db: AsyncSession = Depends(get_db), user_id: int = Depends(get_current_user)):
+async def get_balance_summary(account_id = Query(None), db1: AsyncSession = Depends(get_db, use_cache=False), db2: AsyncSession = Depends(get_db, use_cache=False), user_id: int = Depends(get_current_user)):
     """Endpoint to get the balance summary for the current user."""
-    balance_summary = get_balance_summary_details(user_id, account_id, db)
-    if not balance_summary:
+    balance_summary, monthly_balance_summary = await asyncio.gather(
+        get_balance_summary_details(user_id, account_id, db1),
+        get_monthly_balance_summary(user_id, account_id, db2)
+    )
+    if not balance_summary and not monthly_balance_summary:
         return APIResponse(success=False, error="No transactions found.")
-    return APIResponse(data=balance_summary)
+    combined_data = {
+        "balance_summary": balance_summary,
+        "monthly_balance_summary": monthly_balance_summary
+    }
+    return APIResponse(data=combined_data)
 
