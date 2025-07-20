@@ -25,9 +25,15 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
-# SQLAlchemy engine logs (SQL queries, etc.)
-logging.getLogger("sqlalchemy.engine").setLevel(log_level)
-logging.getLogger("sqlalchemy.pool").setLevel(logging.ERROR)
+# Suppress SQLAlchemy verbose logging unless in debug
+if DEBUG:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.INFO)
+else:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+
+logging.getLogger("sqlalchemy.engine").propagate = False
 
 app = FastAPI(debug=DEBUG)
 

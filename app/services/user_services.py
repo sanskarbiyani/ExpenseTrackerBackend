@@ -1,5 +1,5 @@
 import re
-import psycopg2
+import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
@@ -23,23 +23,22 @@ async def create_user(db: AsyncSession, user: UserCreate) -> User:
         await db.refresh(new_user)
     except IntegrityError as e:
         await db.rollback()
-        if isinstance(e.orig, psycopg2.errors.UniqueViolation):
-            # Handle unique constraint violation
-            constraint_name = e.orig.diag.constraint_name
-            message = str(e.orig.diag.message_detail)
-            match = re.search(r"\((\w+)\)=\((.+?)\)", message)
-            if match:
-                field, value = match.groups()
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"{field.capitalize()} '{value}' already exists."
-                )
-            else:
-                raise HTTPException(
-                    status_code = status.HTTP_400_BAD_REQUEST,
-                    detail= f"{constraint_name} already exists."
-                )
+        error_message = str(e.orig)
+        print(f"IntegrityError: {e.orig.__class__.__name__}")
+        match = re.search(r'Key \((\w+)\)=\((.+?)\)', error_message)
+        if match:
+            field, value = match.groups()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{field.capitalize()} '{value}' already exists."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Integrity check failed."
+            )
     except Exception as e:
+        print(f"Unexpected error: {e}")
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
