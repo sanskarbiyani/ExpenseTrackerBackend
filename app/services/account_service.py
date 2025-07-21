@@ -54,4 +54,4 @@ async def get_all_accounts_by_user_id(user_id, db: AsyncSession) -> list[Account
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No accounts found for the user."
         )
-    return [Account.model_validate(account, from_attributes=True) for account in accounts]
+    return list(accounts)
