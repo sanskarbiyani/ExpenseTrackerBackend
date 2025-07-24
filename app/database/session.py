@@ -12,8 +12,11 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 engine = create_async_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False, "ssl": ssl_context} if DATABASE_URL.startswith("sqlite") else {},
+    connect_args={"ssl": ssl_context},
     echo=DEBUG,
+    pool_pre_ping=True,                 # reconnect closed connections
+    pool_size=8,                        # Optional tuning
+    max_overflow=10,                    # Optional tuning
 )
 
 SessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, autoflush=False, expire_on_commit=False)
