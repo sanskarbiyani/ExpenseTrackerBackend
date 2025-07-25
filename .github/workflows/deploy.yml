@@ -15,7 +15,7 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ secrets.GOOGLE_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
           service_account_email: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
 
@@ -24,14 +24,14 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker .
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker
+          docker build -t gcr.io/${{ secrets.GOOGLE_PROJECT_ID }}/expense-tracker .
+          docker push gcr.io/${{ secrets.GOOGLE_PROJECT_ID }}/expense-tracker
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy expense-tracker \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker \
+            --image gcr.io/${{ secrets.GOOGLE_PROJECT_ID }}/expense-tracker \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }},SECRET_KEY=${{ secrets.SECRET_KEY }}
+            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }},SECRET_KEY=${{ secrets.SECRET_KEY }},REFRESH_SECRET_KEY=${{ secrets.REFRESH_SECRET_KEY }},ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }},REFRESH_TOKEN_EXPIRE_MINUTES=${{ secrets.REFRESH_TOKEN_EXPIRE_MINUTES }},ALGORITHM=${{ secrets.ALGORITHM }},
