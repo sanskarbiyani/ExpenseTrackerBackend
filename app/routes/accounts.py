@@ -43,3 +43,5 @@ async def create_account(request: AccountBase, user_id = Depends(get_current_use
     account = CreateAccountResponse.model_validate(new_account)
     
     return APIResponse(success=True, data=account)
+
+# test push
