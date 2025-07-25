@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,6 +15,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Print OIDC environment variables
+        run: |
+          echo "ID_TOKEN_REQUEST_TOKEN = $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+          echo "ID_TOKEN_REQUEST_URL   = $ACTIONS_ID_TOKEN_REQUEST_URL"
 
       # ✅ Authenticate with Workload Identity Federation
       - name: Authenticate to Google Cloud
