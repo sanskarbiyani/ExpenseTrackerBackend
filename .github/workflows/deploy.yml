@@ -2,45 +2,36 @@ name: Deploy to Cloud Run
 
 on:
   push:
-    branches:
-      - main  # Or your deployment branch
+    branches: [main]
 
 jobs:
   deploy:
-    name: Deploy to Google Cloud Run
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
-      - name: Checkout source code
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account_email: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
 
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker asia-south1-docker.pkg.dev
+      - name: Authenticate Docker with Google Cloud
+        run: gcloud auth configure-docker
 
-      - name: Build and Push Docker Image to Artifact Registry
+      - name: Build and Push Docker image
         run: |
-          docker build -t asia-south1-docker.pkg.dev/expensetracker-467016/expense-repo/fastapi-app:$GITHUB_SHA .
-          docker push asia-south1-docker.pkg.dev/expensetracker-467016/expense-repo/fastapi-app:$GITHUB_SHA
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker .
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy fastapi-app \
-            --image=asia-south1-docker.pkg.dev/expensetracker-467016/expense-repo/fastapi-app:$GITHUB_SHA \
-            --region=asia-south1 \
-            --platform=managed \
+          gcloud run deploy expense-tracker \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/expense-tracker \
+            --platform managed \
+            --region us-central1 \
             --allow-unauthenticated \
-            --port=8000
+            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }},SECRET_KEY=${{ secrets.SECRET_KEY }}
