@@ -14,7 +14,7 @@ config = context.config
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
-db_url = os.getenv("DATABASE_URL")
+db_url = os.getenv("DATABASE_SYNC_URL")
 if not db_url:
     raise ValueError("DATABASE_URL environment variable not set")
 

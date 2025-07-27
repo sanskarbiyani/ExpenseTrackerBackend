@@ -25,7 +25,7 @@ async def verfy_user_credentials(request: LoginRequest, db: AsyncSession) -> Use
         )
     
     # Verify the password
-    if user and not verify_password(request.password, str(user.password)):
+    if user and not verify_password(request.password, user.password, user.id):
         raise HTTPException(
             status_code=401,
             detail="Incorrect password."
